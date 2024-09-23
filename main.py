@@ -1,5 +1,6 @@
 # Example file showing a circle moving on screen
 import pygame
+import random
 
 # pygame setup
 pygame.init()
@@ -11,7 +12,8 @@ dt = 0
 player1_position = pygame.Vector2(25,screen.get_height() / 2 - 50)
 player2_position = pygame.Vector2(screen.get_width() - 50,screen.get_height() / 2 - 50)
 
-player_pos = pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2)
+ball_position = pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2)
+
 
 while running:
     # poll for events
@@ -23,14 +25,13 @@ while running:
     # fill the screen with a color to wipe away anything from last frame
     screen.fill("purple")
 
-
     pygame.draw.rect(screen, "white", (player1_position.x, player1_position.y, 25, 100))
     pygame.draw.rect(screen, "white", (player2_position.x, player2_position.y, 25, 100))
+    pygame.draw.circle(screen, "white", (ball_position.x, ball_position.y), 15)
 
     keys = pygame.key.get_pressed()
 
     if keys[pygame.K_z]:
-        print(player1_position.y)
         if player1_position.y > 0:
             player1_position.y -= 300 * dt
 
