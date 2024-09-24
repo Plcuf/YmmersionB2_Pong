@@ -13,15 +13,15 @@ dt = 0
 
 trail_size = 10
 player_speed = 500
-ball_speed = 10
+ball_speed = 0
 
 right_score, left_score = 0, 0
 
 player1_position = pygame.Vector2(25,screen.get_height() / 2 - 50)
 player2_position = pygame.Vector2(screen.get_width() - 50,screen.get_height() / 2 - 50)
 
-centered_player1_position = pygame.Vector2(player1_position.x + 25, player1_position.y + 50)
-centered_player2_position = pygame.Vector2(player2_position.x, player2_position.y + 50)
+centered_player1_position = pygame.Vector2(player1_position.x + (25/2), player1_position.y + 50)
+centered_player2_position = pygame.Vector2(player2_position.x + (25/2), player2_position.y + 50)
 
 def BallInit():
     pos = pygame.Vector2(640, 360)
@@ -113,8 +113,8 @@ while running:
         player2_positions.append([player2_position.x, player2_position.y])
 
     # center the player positions
-    centered_player1_position = pygame.Vector2(player1_position.x + 25, player1_position.y + 50)
-    centered_player2_position = pygame.Vector2(player2_position.x, player2_position.y + 50)
+    centered_player1_position = pygame.Vector2(player1_position.x + (25/2), player1_position.y + 50)
+    centered_player2_position = pygame.Vector2(player2_position.x + (25/2), player2_position.y + 50)
 
     #update ball position
     ball_position += ball_direction * ball_speed
@@ -126,14 +126,14 @@ while running:
         ball_direction.y = -ball_direction.y
 
     # bounce the ball on player 1
-    if (ball_position.x - centered_player1_position.x <= 15 and ball_position.x - centered_player1_position.x >= -40) and (ball_position.y - centered_player1_position.y <= 50 and ball_position.y - centered_player1_position.y >= -50):
+    if (ball_position.x - centered_player1_position.x <= 15 + (25/2) and ball_position.x - centered_player1_position.x >= -40) and (ball_position.y - centered_player1_position.y <= 50 and ball_position.y - centered_player1_position.y >= -50):
         if ball_direction.x < 0:
             ball_direction.x = -ball_direction.x
         ball_direction.y += (ball_position.y - centered_player1_position.y) / 50
-        if ball_direction.y > 2:
-            ball_direction.y = 2
-        if ball_direction.y < -2:
-            ball_direction.y = -2
+        if ball_direction.y > 1.5:
+            ball_direction.y = 1.5
+        if ball_direction.y < -1.5:
+            ball_direction.y = -1.5
         
         if ball_direction.x > 0:
             ball_direction.x = math.ceil(ball_direction.x)
@@ -143,14 +143,14 @@ while running:
 
 
     # bounce the ball on player 2
-    if (ball_position.x - centered_player2_position.x >= -15 and ball_position.x - centered_player2_position.x <= 40) and (ball_position.y - centered_player2_position.y <= 50 and ball_position.y - centered_player2_position.y >= -50):
+    if (ball_position.x - centered_player2_position.x >= -15 - (25/2) and ball_position.x - centered_player2_position.x <= 40) and (ball_position.y - centered_player2_position.y <= 50 and ball_position.y - centered_player2_position.y >= -50):
         if ball_direction.x > 0:
             ball_direction.x = -ball_direction.x
         ball_direction.y += (ball_position.y - centered_player2_position.y) / 50
-        if ball_direction.y > 2:
-            ball_direction.y = 2
-        if ball_direction.y < -2:
-            ball_direction.y = -2
+        if ball_direction.y > 1.5:
+            ball_direction.y = 1.5
+        if ball_direction.y < -1.5:
+            ball_direction.y = -1.5
         
         if ball_direction.x > 0:
             ball_direction.x = math.ceil(ball_direction.x)
@@ -173,6 +173,7 @@ while running:
 
     # player 1 controls
     if keys[pygame.K_z]:
+        print((abs(centered_player1_position.y - centered_player2_position.y)))
         if player1_position.y > 0:
             player1_position.y -= player_speed * dt
 
