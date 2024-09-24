@@ -2,6 +2,7 @@
 import pygame
 import random
 import time
+import math
 
 # pygame setup
 pygame.init()
@@ -21,10 +22,10 @@ centered_player2_position = pygame.Vector2(player2_position.x, player2_position.
 def BallInit():
     pos = pygame.Vector2(640, 360)
     dir = pygame.Vector2(random.randint(-100, 100), random.randint(-100, 100))
-    if dir.x in range(0, 10):
-        dir.x = 20
-    elif dir.x in range(-10, 0):
-        dir.x = -20
+    if dir.x in range(0, 20):
+        dir.x = 30
+    elif dir.x in range(-20, 0):
+        dir.x = -30
     dir = dir.normalize()
     return pos, dir
 
@@ -109,23 +110,39 @@ while running:
 
     # bounce the ball on player 1
     if ball_position.x - centered_player1_position.x <= 15 and ball_position.y - centered_player1_position.y <= 50:
-        ball_direction.x = -ball_direction.x
+        if ball_direction.x < 0:
+            ball_direction.x = -ball_direction.x
         ball_direction.y += (ball_position.y - centered_player1_position.y) / 50
-        if ball_direction.y > 75:
-            ball_direction.y = 75
-        if ball_direction.y < -75:
-            ball_direction.y = -75
+        print("avant", ball_direction)
+        if ball_direction.y > 2:
+            ball_direction.y = 2
+        if ball_direction.y < -2:
+            ball_direction.y = -2
+        
+        if ball_direction.x > 0:
+            ball_direction.x = math.ceil(ball_direction.x)
+        else:
+            ball_direction.x = math.floor(ball_direction.x)
+        print("après", ball_direction)
         ball_direction = ball_direction.normalize()
 
 
     # bounce the ball on player 2
     if ball_position.x - centered_player2_position.x >= -15 and ball_position.y - centered_player2_position.y <= 50:
-        ball_direction.x = -ball_direction.x
+        if ball_direction.x > 0:
+            ball_direction.x = -ball_direction.x
         ball_direction.y += (ball_position.y - centered_player2_position.y) / 50
-        if ball_direction.y > 75:
-            ball_direction.y = 75
-        if ball_direction.y < -75:
-            ball_direction.y = -75
+        print("avant", ball_direction)
+        if ball_direction.y > 2:
+            ball_direction.y = 2
+        if ball_direction.y < -2:
+            ball_direction.y = -2
+        
+        if ball_direction.x > 0:
+            ball_direction.x = math.ceil(ball_direction.x)
+        else:
+            ball_direction.x = math.floor(ball_direction.x)
+        print("après", ball_direction)
         ball_direction = ball_direction.normalize()
 
     # check if point marked and updates score
@@ -165,6 +182,5 @@ while running:
     # dt is delta time in seconds since last frame, used for framerate-
     # independent physics.
     dt = clock.tick(60) / 1000
-
 
 pygame.quit()

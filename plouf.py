@@ -1,6 +1,7 @@
 # Example file showing a circle moving on screen
 import pygame
 import random
+import time
 import math
 
 # pygame setup
@@ -10,25 +11,33 @@ clock = pygame.time.Clock()
 running = True
 dt = 0
 
+right_score, left_score = 0, 0
+
 player1_position = pygame.Vector2(25,screen.get_height() / 2 - 50)
 player2_position = pygame.Vector2(screen.get_width() - 50,screen.get_height() / 2 - 50)
 
 centered_player1_position = pygame.Vector2(player1_position.x + 25, player1_position.y + 50)
 centered_player2_position = pygame.Vector2(player2_position.x, player2_position.y + 50)
 
-ball_position = pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2)
-ball_direction = pygame.Vector2(random.randint(-100, 100), random.randint(-100, 100))
-if ball_direction.x in range(0, 10):
-    ball_direction.x = 20
-elif ball_direction.x in range(-10, 0):
-    ball_direction.x = -20
-ball_direction = ball_direction.normalize()
+def BallInit():
+    pos = pygame.Vector2(640, 360)
+    dir = pygame.Vector2(random.randint(-100, 100), random.randint(-100, 100))
+    if dir.x in range(0, 20):
+        dir.x = 30
+    elif dir.x in range(-20, 0):
+        dir.x = -30
+    dir = dir.normalize()
+    return pos, dir
+
+ball_position, ball_direction = BallInit()
 # ball_direction = pygame.Vector2(1, 0)
 ball_speed = 7
 
 ball_positions = [ball_position]
 player1_positions = [centered_player1_position]
 player2_positions = [centered_player2_position]
+
+scored = False
 
 while running:
     # poll for events
@@ -62,6 +71,10 @@ while running:
     pygame.draw.rect(screen, "white", (player1_position.x, player1_position.y, 25, 100))
     pygame.draw.rect(screen, "white", (player2_position.x, player2_position.y, 25, 100))
     pygame.draw.circle(screen, "white", (ball_position.x, ball_position.y), 15)
+
+    if scored:
+        time.sleep(3)
+        scored = False
 
     # math the ball trail
     if len(ball_positions) > 10:
@@ -97,24 +110,51 @@ while running:
 
     # bounce the ball on player 1
     if ball_position.x - centered_player1_position.x <= 15 and ball_position.y - centered_player1_position.y <= 50:
-        ball_direction.x = -ball_direction.x
+        if ball_direction.x < 0:
+            ball_direction.x = -ball_direction.x
         ball_direction.y += (ball_position.y - centered_player1_position.y) / 50
-        if ball_direction.y > 75:
-            ball_direction.y = 75
-        if ball_direction.y < -75:
-            ball_direction.y = -75
+        print("avant", ball_direction)
+        if ball_direction.y > 2:
+            ball_direction.y = 2
+        if ball_direction.y < -2:
+            ball_direction.y = -2
+        
+        if ball_direction.x > 0:
+            ball_direction.x = math.ceil(ball_direction.x)
+        else:
+            ball_direction.x = math.floor(ball_direction.x)
+        print("après", ball_direction)
         ball_direction = ball_direction.normalize()
 
 
     # bounce the ball on player 2
     if ball_position.x - centered_player2_position.x >= -15 and ball_position.y - centered_player2_position.y <= 50:
-        ball_direction.x = -ball_direction.x
+        if ball_direction.x > 0:
+            ball_direction.x = -ball_direction.x
         ball_direction.y += (ball_position.y - centered_player2_position.y) / 50
-        if ball_direction.y > 75:
-            ball_direction.y = 75
-        if ball_direction.y < -75:
-            ball_direction.y = -75
+        print("avant", ball_direction)
+        if ball_direction.y > 2:
+            ball_direction.y = 2
+        if ball_direction.y < -2:
+            ball_direction.y = -2
+        
+        if ball_direction.x > 0:
+            ball_direction.x = math.ceil(ball_direction.x)
+        else:
+            ball_direction.x = math.floor(ball_direction.x)
+        print("après", ball_direction)
         ball_direction = ball_direction.normalize()
+
+    # check if point marked and updates score
+    if ball_position.x <= 0:
+        right_score += 1
+        scored = True
+    if ball_position.x >= screen.get_width():
+        left_score += 1
+        scored = True
+
+    if scored:
+        ball_position, ball_direction = BallInit()
 
     keys = pygame.key.get_pressed()
 
@@ -142,6 +182,5 @@ while running:
     # dt is delta time in seconds since last frame, used for framerate-
     # independent physics.
     dt = clock.tick(60) / 1000
-
 
 pygame.quit()
