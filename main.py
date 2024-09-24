@@ -114,7 +114,9 @@ while running:
     ball_position += ball_direction * ball_speed
 
     # bounce the ball on top and bottom side
-    if (ball_position.y - 15) <= 0 or (ball_position.y + 15) >= screen.get_height():
+    if (ball_position.y - 15) <= 0 and ball_direction.y < 0:
+        ball_direction.y = -ball_direction.y
+    if (ball_position.y + 15) >= screen.get_height() and ball_direction.y > 0:
         ball_direction.y = -ball_direction.y
 
     # bounce the ball on player 1

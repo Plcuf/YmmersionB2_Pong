@@ -29,6 +29,14 @@ def BallInit():
     dir = dir.normalize()
     return pos, dir
 
+def UpdateScoreText():
+    right_score_text = pygame.font.Font(None, 150)
+    right_score_surface = right_score_text.render(str(right_score), False, "white")
+    left_score_text = pygame.font.Font(None, 150)
+    left_score_surface = left_score_text.render(str(left_score), False, "white")
+    screen.blit(right_score_surface, (1210, 10))
+    screen.blit(left_score_surface, (10, 10))
+
 ball_position, ball_direction = BallInit()
 # ball_direction = pygame.Vector2(1, 0)
 ball_speed = 7
@@ -48,6 +56,7 @@ while running:
 
     # fill the screen with a color to wipe away anything from last frame
     screen.fill("black")
+    UpdateScoreText()
 
     # draw circle and trail
     size = 1
@@ -73,7 +82,7 @@ while running:
     pygame.draw.circle(screen, "white", (ball_position.x, ball_position.y), 15)
 
     if scored:
-        time.sleep(3)
+        time.sleep(1)
         scored = False
 
     # math the ball trail
@@ -105,7 +114,9 @@ while running:
     ball_position += ball_direction * ball_speed
 
     # bounce the ball on top and bottom side
-    if (ball_position.y - 15) <= 0 or (ball_position.y + 15) >= screen.get_height():
+    if (ball_position.y - 15) <= 0 and ball_direction.y < 0:
+        ball_direction.y = -ball_direction.y
+    if (ball_position.y + 15) >= screen.get_height() and ball_direction.y > 0:
         ball_direction.y = -ball_direction.y
 
     # bounce the ball on player 1
