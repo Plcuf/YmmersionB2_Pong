@@ -86,6 +86,8 @@ while running:
 
     if scored:
         time.sleep(1)
+        player1_position = pygame.Vector2(25,screen.get_height() / 2 - 50)
+        player2_position = pygame.Vector2(screen.get_width() - 50,screen.get_height() / 2 - 50)
         scored = False
 
     # math the ball trail
@@ -127,7 +129,6 @@ while running:
         if ball_direction.x < 0:
             ball_direction.x = -ball_direction.x
         ball_direction.y += (ball_position.y - centered_player1_position.y) / 50
-        print("avant", ball_direction)
         if ball_direction.y > 2:
             ball_direction.y = 2
         if ball_direction.y < -2:
@@ -137,7 +138,6 @@ while running:
             ball_direction.x = math.ceil(ball_direction.x)
         else:
             ball_direction.x = math.floor(ball_direction.x)
-        print("après", ball_direction)
         ball_direction = ball_direction.normalize()
 
 
@@ -146,7 +146,6 @@ while running:
         if ball_direction.x > 0:
             ball_direction.x = -ball_direction.x
         ball_direction.y += (ball_position.y - centered_player2_position.y) / 50
-        print("avant", ball_direction)
         if ball_direction.y > 2:
             ball_direction.y = 2
         if ball_direction.y < -2:
@@ -156,7 +155,6 @@ while running:
             ball_direction.x = math.ceil(ball_direction.x)
         else:
             ball_direction.x = math.floor(ball_direction.x)
-        print("après", ball_direction)
         ball_direction = ball_direction.normalize()
 
     # check if point marked and updates score
