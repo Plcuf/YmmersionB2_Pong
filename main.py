@@ -12,7 +12,8 @@ running = True
 dt = 0
 
 trail_size = 10
-player_speed = 300
+player_speed = 500
+ball_speed = 7
 
 right_score, left_score = 0, 0
 
@@ -42,7 +43,6 @@ def UpdateScoreText():
 
 ball_position, ball_direction = BallInit()
 # ball_direction = pygame.Vector2(1, 0)
-ball_speed = 7
 
 ball_positions = [ball_position]
 player1_positions = [centered_player1_position]
