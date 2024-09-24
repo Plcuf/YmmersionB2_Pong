@@ -12,6 +12,7 @@ running = True
 dt = 0
 
 trail_size = 10
+player_speed = 300
 
 right_score, left_score = 0, 0
 
@@ -141,7 +142,7 @@ while running:
 
 
     # bounce the ball on player 2
-    if ball_position.x - centered_player2_position.x >= -15 and ball_position.y - centered_player2_position.y <= 50:
+    if ball_position.x - centered_player2_position.x >= -15 and (ball_position.y - centered_player2_position.y <= 50 and ball_position.y - centered_player2_position.y >= -50):
         if ball_direction.x > 0:
             ball_direction.x = -ball_direction.x
         ball_direction.y += (ball_position.y - centered_player2_position.y) / 50
@@ -171,21 +172,39 @@ while running:
 
     keys = pygame.key.get_pressed()
 
+    # player 1 controls
     if keys[pygame.K_z]:
         if player1_position.y > 0:
-            player1_position.y -= 300 * dt
+            player1_position.y -= player_speed * dt
 
     if keys[pygame.K_s]:
         if player1_position.y < screen.get_height() - 100:
-            player1_position.y += 300 * dt
+            player1_position.y += player_speed * dt
 
+    if keys[pygame.K_q]:
+        if player1_position.x > 25:
+            player1_position.x -= player_speed * dt
+
+    if keys[pygame.K_d]:
+        if player1_position.x < screen.get_width() - 50:
+            player1_position.x += player_speed * dt
+
+    # player 2 controls
     if keys[pygame.K_UP]:
         if player2_position.y > 0:
-            player2_position.y -= 300 * dt
+            player2_position.y -= player_speed * dt
     
     if keys[pygame.K_DOWN]:
         if player2_position.y < screen.get_height() - 100:
-            player2_position.y += 300 * dt
+            player2_position.y += player_speed * dt
+
+    if keys[pygame.K_LEFT]:
+        if player2_position.x > 25:
+            player2_position.x -= player_speed * dt
+    
+    if keys[pygame.K_RIGHT]:
+        if player2_position.x < screen.get_width() - 50:
+            player2_position.x += player_speed * dt
 
 
     # flip() the display to put your work on screen
