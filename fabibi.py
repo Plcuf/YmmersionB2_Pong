@@ -3,6 +3,8 @@ import pygame
 import random
 import time
 
+import pygame.freetype
+
 # pygame setup
 pygame.init()
 screen = pygame.display.set_mode((1280, 720))
@@ -20,10 +22,20 @@ def BallInit():
     dir = dir.normalize()
     return pos, dir
 
+def UpdateScoreText():
+    right_score_text = pygame.font.Font(None, 150)
+    right_score_surface = right_score_text.render(str(right_score), False, "white")
+    left_score_text = pygame.font.Font(None, 150)
+    left_score_surface = left_score_text.render(str(left_score), False, "white")
+    screen.blit(right_score_surface, (1210, 10))
+    screen.blit(left_score_surface, (10, 10))
+
 player1_position = pygame.Vector2(25,screen.get_height() / 2 - 50)
 player2_position = pygame.Vector2(screen.get_width() - 50,screen.get_height() / 2 - 50)
 
 right_score, left_score = 0, 0
+UpdateScoreText()
+
 
 centered_player1_position = pygame.Vector2(player1_position.x + 25, player1_position.y + 50)
 centered_player2_position = pygame.Vector2(player2_position.x, player2_position.y + 50)
@@ -42,6 +54,7 @@ while running:
 
     # fill the screen with a color to wipe away anything from last frame
     screen.fill("purple")
+    UpdateScoreText()
 
     # draw the shapes :D
     pygame.draw.rect(screen, "white", (player1_position.x, player1_position.y, 25, 100))
