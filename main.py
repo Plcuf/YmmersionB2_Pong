@@ -122,7 +122,7 @@ while running:
         ball_direction.y = -ball_direction.y
 
     # bounce the ball on player 1
-    if ball_position.x - centered_player1_position.x <= 15 and ball_position.y - centered_player1_position.y <= 50:
+    if ball_position.x - centered_player1_position.x <= 15 and (ball_position.y - centered_player1_position.y <= 50 and ball_position.y - centered_player1_position.y >= -50):
         if ball_direction.x < 0:
             ball_direction.x = -ball_direction.x
         ball_direction.y += (ball_position.y - centered_player1_position.y) / 50
