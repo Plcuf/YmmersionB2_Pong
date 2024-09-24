@@ -13,7 +13,7 @@ dt = 0
 
 trail_size = 10
 player_speed = 500
-ball_speed = 7
+ball_speed = 10
 
 right_score, left_score = 0, 0
 
@@ -82,7 +82,8 @@ while running:
     # draw the pads
     pygame.draw.rect(screen, "white", (player1_position.x, player1_position.y, 25, 100))
     pygame.draw.rect(screen, "white", (player2_position.x, player2_position.y, 25, 100))
-    pygame.draw.circle(screen, "white", (ball_position.x, ball_position.y), 15)
+    pygame.draw.circle(screen, "purple", (ball_position.x, ball_position.y), 15)
+    pygame.draw.circle(screen, "white", (ball_position.x, ball_position.y), 10)
 
     if scored:
         time.sleep(1)
@@ -125,7 +126,7 @@ while running:
         ball_direction.y = -ball_direction.y
 
     # bounce the ball on player 1
-    if ball_position.x - centered_player1_position.x <= 15 and (ball_position.y - centered_player1_position.y <= 50 and ball_position.y - centered_player1_position.y >= -50):
+    if (ball_position.x - centered_player1_position.x <= 15 and ball_position.x - centered_player1_position.x >= -40) and (ball_position.y - centered_player1_position.y <= 50 and ball_position.y - centered_player1_position.y >= -50):
         if ball_direction.x < 0:
             ball_direction.x = -ball_direction.x
         ball_direction.y += (ball_position.y - centered_player1_position.y) / 50
@@ -142,7 +143,7 @@ while running:
 
 
     # bounce the ball on player 2
-    if ball_position.x - centered_player2_position.x >= -15 and (ball_position.y - centered_player2_position.y <= 50 and ball_position.y - centered_player2_position.y >= -50):
+    if (ball_position.x - centered_player2_position.x >= -15 and ball_position.x - centered_player2_position.x <= 40) and (ball_position.y - centered_player2_position.y <= 50 and ball_position.y - centered_player2_position.y >= -50):
         if ball_direction.x > 0:
             ball_direction.x = -ball_direction.x
         ball_direction.y += (ball_position.y - centered_player2_position.y) / 50

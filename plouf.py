@@ -12,6 +12,8 @@ running = True
 dt = 0
 
 trail_size = 10
+player_speed = 500
+ball_speed = 10
 
 right_score, left_score = 0, 0
 
@@ -41,7 +43,6 @@ def UpdateScoreText():
 
 ball_position, ball_direction = BallInit()
 # ball_direction = pygame.Vector2(1, 0)
-ball_speed = 7
 
 ball_positions = [ball_position]
 player1_positions = [centered_player1_position]
@@ -81,10 +82,13 @@ while running:
     # draw the pads
     pygame.draw.rect(screen, "white", (player1_position.x, player1_position.y, 25, 100))
     pygame.draw.rect(screen, "white", (player2_position.x, player2_position.y, 25, 100))
-    pygame.draw.circle(screen, "white", (ball_position.x, ball_position.y), 15)
+    pygame.draw.circle(screen, "purple", (ball_position.x, ball_position.y), 15)
+    pygame.draw.circle(screen, "white", (ball_position.x, ball_position.y), 10)
 
     if scored:
         time.sleep(1)
+        player1_position = pygame.Vector2(25,screen.get_height() / 2 - 50)
+        player2_position = pygame.Vector2(screen.get_width() - 50,screen.get_height() / 2 - 50)
         scored = False
 
     # math the ball trail
@@ -122,11 +126,10 @@ while running:
         ball_direction.y = -ball_direction.y
 
     # bounce the ball on player 1
-    if ball_position.x - centered_player1_position.x <= 15 and ball_position.y - centered_player1_position.y <= 50:
+    if (ball_position.x - centered_player1_position.x <= 15 and ball_position.x - centered_player1_position.x >= -40) and (ball_position.y - centered_player1_position.y <= 50 and ball_position.y - centered_player1_position.y >= -50):
         if ball_direction.x < 0:
             ball_direction.x = -ball_direction.x
         ball_direction.y += (ball_position.y - centered_player1_position.y) / 50
-        print("avant", ball_direction)
         if ball_direction.y > 2:
             ball_direction.y = 2
         if ball_direction.y < -2:
@@ -136,16 +139,14 @@ while running:
             ball_direction.x = math.ceil(ball_direction.x)
         else:
             ball_direction.x = math.floor(ball_direction.x)
-        print("après", ball_direction)
         ball_direction = ball_direction.normalize()
 
 
     # bounce the ball on player 2
-    if ball_position.x - centered_player2_position.x >= -15 and ball_position.y - centered_player2_position.y <= 50:
+    if (ball_position.x - centered_player2_position.x >= -15 and ball_position.x - centered_player2_position.x <= 40) and (ball_position.y - centered_player2_position.y <= 50 and ball_position.y - centered_player2_position.y >= -50):
         if ball_direction.x > 0:
             ball_direction.x = -ball_direction.x
         ball_direction.y += (ball_position.y - centered_player2_position.y) / 50
-        print("avant", ball_direction)
         if ball_direction.y > 2:
             ball_direction.y = 2
         if ball_direction.y < -2:
@@ -155,7 +156,6 @@ while running:
             ball_direction.x = math.ceil(ball_direction.x)
         else:
             ball_direction.x = math.floor(ball_direction.x)
-        print("après", ball_direction)
         ball_direction = ball_direction.normalize()
 
     # check if point marked and updates score
@@ -171,21 +171,39 @@ while running:
 
     keys = pygame.key.get_pressed()
 
+    # player 1 controls
     if keys[pygame.K_z]:
         if player1_position.y > 0:
-            player1_position.y -= 300 * dt
+            player1_position.y -= player_speed * dt
 
     if keys[pygame.K_s]:
         if player1_position.y < screen.get_height() - 100:
-            player1_position.y += 300 * dt
+            player1_position.y += player_speed * dt
 
+    if keys[pygame.K_q]:
+        if player1_position.x > 25:
+            player1_position.x -= player_speed * dt
+
+    if keys[pygame.K_d]:
+        if player1_position.x < screen.get_width() - 50:
+            player1_position.x += player_speed * dt
+
+    # player 2 controls
     if keys[pygame.K_UP]:
         if player2_position.y > 0:
-            player2_position.y -= 300 * dt
+            player2_position.y -= player_speed * dt
     
     if keys[pygame.K_DOWN]:
         if player2_position.y < screen.get_height() - 100:
-            player2_position.y += 300 * dt
+            player2_position.y += player_speed * dt
+
+    if keys[pygame.K_LEFT]:
+        if player2_position.x > 25:
+            player2_position.x -= player_speed * dt
+    
+    if keys[pygame.K_RIGHT]:
+        if player2_position.x < screen.get_width() - 50:
+            player2_position.x += player_speed * dt
 
 
     # flip() the display to put your work on screen
