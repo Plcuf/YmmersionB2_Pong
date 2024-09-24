@@ -23,7 +23,8 @@ if ball_direction.x in range(0, 10):
 elif ball_direction.x in range(-10, 0):
     ball_direction.x = -20
 ball_direction = ball_direction.normalize()
-ball_speed = 5
+# ball_direction = pygame.Vector2(1, 0)
+ball_speed = 7
 
 while running:
     # poll for events
@@ -41,8 +42,8 @@ while running:
     pygame.draw.circle(screen, "white", (ball_position.x, ball_position.y), 15)
 
     # center the player positions
-    centered_player1_position = pygame.Vector2(player1_position.x + 12.5, player1_position.y + 50)
-    centered_player2_position = pygame.Vector2(player2_position.x + 12.5, player2_position.y + 50)
+    centered_player1_position = pygame.Vector2(player1_position.x + 25, player1_position.y + 50)
+    centered_player2_position = pygame.Vector2(player2_position.x, player2_position.y + 50)
 
     #update ball position
     ball_position += ball_direction * ball_speed
@@ -52,11 +53,11 @@ while running:
         ball_direction.y = -ball_direction.y
 
     # bounce the ball on player 1
-    if ball_position.x - player1_position.x <= 10 and ball_position.y - player1_position.y <= 50:
+    if ball_position.x - centered_player1_position.x <= 15 and ball_position.y - centered_player1_position.y <= 75:
         ball_direction.x = -ball_direction.x
 
     # bounce the ball on player 2
-    if ball_position.x - player2_position.x >= 0 and ball_position.y - player2_position.y <= 50:
+    if ball_position.x - centered_player2_position.x >= -15 and ball_position.y - centered_player2_position.y <= 75:
         ball_direction.x = -ball_direction.x
 
     keys = pygame.key.get_pressed()
@@ -86,6 +87,4 @@ while running:
     # independent physics.
     dt = clock.tick(60) / 1000
     
-
-
 pygame.quit()
