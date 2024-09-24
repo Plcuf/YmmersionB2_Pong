@@ -17,10 +17,13 @@ centered_player1_position = pygame.Vector2(player1_position.x + 25, player1_posi
 centered_player2_position = pygame.Vector2(player2_position.x, player2_position.y + 50)
 
 ball_position = pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2)
-#ball_direction = pygame.Vector2(random.randint(-100, 100), random.randint(-100, 100))
-#ball_direction = ball_direction.normalize()
-ball_direction = pygame.Vector2(1, 0)
-ball_speed = 8
+ball_direction = pygame.Vector2(random.randint(-100, 100), random.randint(-100, 100))
+if ball_direction.x in range(0, 10):
+    ball_direction.x = 20
+elif ball_direction.x in range(-10, 0):
+    ball_direction.x = -20
+ball_direction = ball_direction.normalize()
+ball_speed = 5
 
 while running:
     # poll for events
