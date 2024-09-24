@@ -15,6 +15,10 @@ player2_position = pygame.Vector2(screen.get_width() - 50,screen.get_height() / 
 
 ball_position = pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2)
 ball_direction = pygame.Vector2(random.randint(-100, 100), random.randint(-100, 100))
+if ball_direction.x in range(0, 10):
+    ball_direction.x = 20
+elif ball_direction.x in range(-10, 0):
+    ball_direction.x = -20
 ball_direction = ball_direction.normalize()
 ball_speed = 5
 
