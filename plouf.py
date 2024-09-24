@@ -11,6 +11,8 @@ clock = pygame.time.Clock()
 running = True
 dt = 0
 
+trail_size = 10
+
 right_score, left_score = 0, 0
 
 player1_position = pygame.Vector2(25,screen.get_height() / 2 - 50)
@@ -61,19 +63,19 @@ while running:
     # draw circle and trail
     size = 1
     for element in reversed(ball_positions):
-        pygame.draw.circle(screen, "purple", (element[0], element[1]), 15-size)
+        pygame.draw.circle(screen, ((135+(size*5)), 49, 181), (element[0], element[1]), 15-size)
         size += 1
 
     # draw player 1 trail
     size = 1
     for element in reversed(player1_positions):
-        pygame.draw.rect(screen, "purple", (element[0] + (size/2), element[1], 25-size, 100))
+        pygame.draw.rect(screen, (34, 59-(size*5), 199), (element[0] + (size/2), element[1], 25-size, 100))
         size += 1
 
     # draw player 2 trail
     size = 1
     for element in reversed(player2_positions):
-        pygame.draw.rect(screen, "purple", (element[0] + (size/2), element[1], 25-size, 100))
+        pygame.draw.rect(screen, (250, 2, 2+(size*5)), (element[0] + (size/2), element[1], 25-size, 100))
         size += 1
 
     # draw the pads
@@ -86,21 +88,21 @@ while running:
         scored = False
 
     # math the ball trail
-    if len(ball_positions) > 10:
+    if len(ball_positions) > trail_size:
         ball_positions.pop(0)
         ball_positions.append([ball_position.x, ball_position.y])
     else:
         ball_positions.append([ball_position.x, ball_position.y])
 
     # math the player 1 trail
-    if len(player1_positions) > 10:
+    if len(player1_positions) > trail_size:
         player1_positions.pop(0)
         player1_positions.append([player1_position.x, player1_position.y])
     else:
         player1_positions.append([player1_position.x, player1_position.y])
     
     # math the player 2 trail
-    if len(player2_positions) > 10:
+    if len(player2_positions) > trail_size:
         player2_positions.pop(0)
         player2_positions.append([player2_position.x, player2_position.y])
     else:
