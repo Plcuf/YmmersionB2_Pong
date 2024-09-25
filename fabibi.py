@@ -1,7 +1,6 @@
 # Example file showing a circle moving on screen
 import pygame
 import random
-import time
 import math
 
 # pygame setup
@@ -14,7 +13,14 @@ dt = 0
 
 trail_size = 10
 player_speed = 500
-ball_speed = 10
+
+player1_bumping = False
+player1_bump_start = 0
+player2_bumping = False
+player2_bump_start = 0
+
+pads_width = 25
+pads_height = 100
 
 right_score, left_score = 0, 0
 
@@ -35,9 +41,9 @@ def Init():
     elif ball_direction.x in range(-20, 0):
         ball_direction.x = -30
     ball_direction = ball_direction.normalize()
-    return ball_position, ball_direction, player1_position, player2_position
+    return ball_position, ball_direction, player1_position, player2_position, 0
 
-ball_position, ball_direction, player1_position, player2_position = Init()
+ball_position, ball_direction, player1_position, player2_position, ball_speed = Init()
 
 def UpdateScoreText():
     right_score_text = pygame.font.Font(None, 150)
@@ -63,12 +69,11 @@ async def Goal():
         pygame.display.flip()
         pygame.time.wait(1000)
 
+
 touch_fx = pygame.mixer.Sound("./sounds/touched.mp3")
 touch_fx.set_volume(0.7)
 goal_fx = pygame.mixer.Sound("./sounds/blast_3.mp3")
 
-player1_size = 1
-player2_size = 1
 
 bump_duration = 1
 bump_cd1 = 0
@@ -137,7 +142,7 @@ while running:
     centered_player2_position = pygame.Vector2(player2_position.x, player2_position.y + 50)
 
     #update ball position
-    ball_position += ball_direction * ball_speed
+    ball_position += ball_direction * (ball_speed * dt)
 
     # bounce the ball on top and bottom side
     if (ball_position.y - 15) <= 0 and ball_direction.y < 0:
@@ -149,6 +154,11 @@ while running:
     if (ball_position.x - centered_player1_position.x <= 15 and ball_position.x - centered_player1_position.x >= -40) and (ball_position.y - centered_player1_position.y <= 50 and ball_position.y - centered_player1_position.y >= -50):
         # play the collision sound 
         touch_fx.play()
+        if player1_bumping:
+            player1_bumping = False
+            ball_speed = 1000
+        else:
+            ball_speed = 500
         if ball_direction.x < 0:
             ball_direction.x = -ball_direction.x
         ball_direction.y += (ball_position.y - centered_player1_position.y) / 50
@@ -163,11 +173,15 @@ while running:
             ball_direction.x = math.floor(ball_direction.x)
         ball_direction = ball_direction.normalize()
 
-
     # bounce the ball on player 2
     if (ball_position.x - centered_player2_position.x >= -15 and ball_position.x - centered_player2_position.x <= 40) and (ball_position.y - centered_player2_position.y <= 50 and ball_position.y - centered_player2_position.y >= -50):
         # play the collision sound 
         touch_fx.play()
+        if player2_bumping:
+            player2_bumping = False
+            ball_speed = 1000
+        else:
+            ball_speed = 500
         if ball_direction.x > 0:
             ball_direction.x = -ball_direction.x
         ball_direction.y += (ball_position.y - centered_player2_position.y) / 50
@@ -185,12 +199,12 @@ while running:
     # check if point marked and updates score
     if ball_position.x <= 0:
         goal_fx.play()
-        ball_position, ball_direction, player1_position, player2_position = Init()
+        ball_position, ball_direction, player1_position, player2_position, ball_speed = Init()
         right_score += 1
         Goal()
     if ball_position.x >= screen.get_width():
         goal_fx.play()
-        ball_position, ball_direction, player1_position, player2_position = Init()
+        ball_position, ball_direction, player1_position, player2_position, ball_speed = Init()
         left_score += 1
         Goal()
 
@@ -198,38 +212,103 @@ while running:
 
     # player 1 controls
     if keys[pygame.K_z]:
-        if player1_position.y > 0:
-            player1_position.y -= player_speed * dt
+        if player1_position.y > (pads_height/2):
+            if ((abs(player1_position.x - player2_position.x) < pads_width) and (-pads_height <= ((player1_position.y - player_speed * dt) - player2_position.y) <= pads_height)):
+                player1_position.y = player2_position.y + pads_height
+                if player2_bumping:
+                    player2_bumping = False
+                    player1_position.y += 50
+            else:
+                player1_position.y -= player_speed * dt
+            
 
     if keys[pygame.K_s]:
-        if player1_position.y < screen.get_height() - 100:
-            player1_position.y += player_speed * dt
+        if player1_position.y < screen.get_height() - (pads_height/2):
+            if ((abs(player1_position.x - player2_position.x) < pads_width) and (-pads_height <= ((player1_position.y + player_speed * dt) - player2_position.y) <= pads_height)):
+                player1_position.y = player2_position.y - pads_height
+                if player2_bumping:
+                    player2_bumping = False
+                    player1_position.y -= 50
+            else:
+                player1_position.y += player_speed * dt
 
     if keys[pygame.K_q]:
-        if player1_position.x > 25:
-            player1_position.x -= player_speed * dt
+        if player1_position.x > (pads_width/2) + 25:
+            if ((abs(player1_position.y - player2_position.y) < pads_height) and (-pads_width <= ((player1_position.x - player_speed * dt) - player2_position.x) <= pads_width)):
+                player1_position.x = player2_position.x + pads_width
+                if player2_bumping:
+                    player2_bumping = False
+                    player1_position.x += 50
+            else:
+                player1_position.x -= player_speed * dt
 
     if keys[pygame.K_d]:
-        if player1_position.x < screen.get_width() - 50:
-            player1_position.x += player_speed * dt
+        if player1_position.x < screen.get_width() - (pads_width/2) - 250:
+            if ((abs(player1_position.y - player2_position.y) < 100) and (-25 <= ((player1_position.x + player_speed * dt) - player2_position.x) <= 25)):
+                player1_position.x = player2_position.x - pads_width
+                if player2_bumping:
+                    player2_bumping = False
+                    player1_position.x -= 50
+            else:
+                player1_position.x += player_speed * dt
+    
+    if keys[pygame.K_e] and not player1_bumping:
+        player1_bumping = True
+        player1_bump_start = pygame.time.get_ticks()
+
 
     # player 2 controls
     if keys[pygame.K_UP]:
-        if player2_position.y > 0:
-            player2_position.y -= player_speed * dt
-    
+        if player2_position.y > (pads_height/2):
+            if ((abs(player2_position.x - player1_position.x) < pads_width) and (-pads_height <= ((player2_position.y - player_speed * dt) - player1_position.y) <= pads_height)):
+                player2_position.y = player1_position.y + pads_height
+                if player1_bumping:
+                    player1_bumping = False
+                    player2_position.y += 50
+            else:
+                player2_position.y -= player_speed * dt
+        
     if keys[pygame.K_DOWN]:
-        if player2_position.y < screen.get_height() - 100:
-            player2_position.y += player_speed * dt
+        if player2_position.y < screen.get_height() - (pads_height/2):
+            if ((abs(player2_position.x - player1_position.x) < pads_width) and (-pads_height <= ((player2_position.y + player_speed * dt) - player1_position.y) <= pads_height)):
+                player2_position.y = player1_position.y - pads_height
+                if player1_bumping:
+                    player1_bumping = False
+                    player2_position.y -= 50
+            else:
+                player2_position.y += player_speed * dt
 
     if keys[pygame.K_LEFT]:
-        if player2_position.x > 25:
-            player2_position.x -= player_speed * dt
+        if player2_position.x > (pads_width/2) + 250:
+            if ((abs(player2_position.y - player1_position.y) < pads_height) and (-pads_width <= ((player2_position.x - player_speed * dt) - player1_position.x) <= pads_width)):
+                player2_position.x = player1_position.x + pads_width
+                if player1_bumping:
+                    player1_bumping = False
+                    player2_position.x += 50
+            else:
+                player2_position.x -= player_speed * dt
     
     if keys[pygame.K_RIGHT]:
-        if player2_position.x < screen.get_width() - 50:
-            player2_position.x += player_speed * dt
+        if player2_position.x < screen.get_width() - (pads_width/2) - 25:
+            if ((abs(player2_position.y - player1_position.y) < pads_height) and (-25 <= ((player2_position.x + player_speed * dt) - player1_position.x) <= 25)):
+                player2_position.x = player1_position.x - pads_width
+                if player1_bumping:
+                    player1_bumping = False
+                    player2_position.x -= 50
+            else:
+                player2_position.x += player_speed * dt
 
+    if keys[pygame.K_0] and not player2_bumping:
+        player2_bumping = True
+        player2_bump_start = pygame.time.get_ticks()
+
+
+    # bump control
+    if player1_bumping and pygame.time.get_ticks() - player1_bump_start >= 250:
+        player1_bumping = False
+
+    if player2_bumping and pygame.time.get_ticks() - player2_bump_start >= 250:
+        player2_bumping = False
 
     # flip() the display to put your work on screen
     pygame.display.flip()
