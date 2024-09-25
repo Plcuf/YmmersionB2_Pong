@@ -34,33 +34,6 @@ def UpdateScoreText():
     screen.blit(right_score_surface, (1210, 10))
     screen.blit(left_score_surface, (10, 10))
 
-# Draw trails
-def BallTrail():
-    for i in range(len(ball_positions)-1):
-        color_decrement = i*5
-        color = (135+(color_decrement), 49, 181)
-        pygame.draw.circle(screen, color, (ball_positions[-(i+1)][0], ball_positions[i][1]), 15-i)
-
-def DrawPlayer1Trail():
-    for i in range(len(player1_positions)):
-        color_decrement = i*5
-        color = (34, 59-(color_decrement), 199)
-        pygame.draw.rect(screen, color, (player1_positions[-(i+1)][0] + (i/2), player1_positions[i][1], pads_width-i, pads_height-i))
-
-def DrawPlayer2Trail():
-    for i in range(len(player2_positions)):
-        color_increment = i*5
-        color = (250, 2, 2+(color_increment))
-        pygame.draw.rect(screen, color, (player2_positions[-(i+1)][0] + (i/2), player2_positions[i][1], pads_width-i, pads_height-i))
-
-# Math for trails
-def TrailMath(trail_tab, position):
-    if len(trail_tab) < length_of_trail:
-        trail_tab.append(position)
-    else:
-        trail_tab.pop(0)
-        trail_tab.append(position)
-
 ###############################
 ########## VARIABLES ##########
 ###############################
@@ -110,7 +83,7 @@ while running:
 
     # Score event
     if scored:
-        time.sleep(1)
+        time.sleep(0)
         player1_position = pygame.Vector2(25,screen.get_height() / 2 - 50)
         player2_position = pygame.Vector2(screen.get_width() - 50,screen.get_height() / 2 - 50)
         scored = False
@@ -210,16 +183,45 @@ while running:
             else:
                 player2_position.x += players_speed * dt
 
-    # Math for trails
-    TrailMath(ball_positions, ball_position)
-    TrailMath(player1_positions, player1_position)
-    TrailMath(player2_positions, player2_position)
-
-    # Draw the trails
-    BallTrail()
-    DrawPlayer1Trail()
-    DrawPlayer2Trail()
+    # Ball trail
+    if len(ball_positions) > length_of_trail:
+        ball_positions.pop(0)
+        ball_positions.append([ball_position.x, ball_position.y])
+    else:
+        ball_positions.append([ball_position.x, ball_position.y])
     
+    decrement = 1
+    for element in reversed(ball_positions):
+        color = (135+(decrement), 49, 181)
+        pygame.draw.circle(screen, color, element, 15-decrement)
+        decrement += 1
+
+    # Player 1 trail
+    if len(player1_positions) > length_of_trail:
+        player1_positions.pop(0)
+        player1_positions.append([player1_position.x - (pads_width/2), player1_position.y - (pads_height/2)])
+    else:
+        player1_positions.append([player1_position.x - (pads_width/2), player1_position.y - (pads_height/2)])
+
+    decrement = 1
+    for element in reversed(player1_positions):
+        color = (34, 59-(decrement), 199)
+        pygame.draw.rect(screen, color, (element, pads_width-decrement, pads_height))
+        decrement += 1
+
+    # Player 2 trail
+    if len(player2_positions) > length_of_trail:
+        player2_positions.pop(0)
+        player2_positions.append([player2_position.x - (pads_width/2), player2_position.y - (pads_height/2)])
+    else:
+        player2_positions.append([player2_position.x - (pads_width/2), player2_position.y - (pads_height/2)])
+
+    decrement = 1
+    for element in reversed(player2_positions):
+        color = (250, 2, 2+(decrement*5))
+        pygame.draw.rect(screen, color, (element, 25-decrement, 100))
+        decrement += 1
+
     # Draw the pads
     pygame.draw.rect(screen, "white", (player1_position.x - (pads_width/2), player1_position.y - (pads_height/2), pads_width, pads_height))
     pygame.draw.rect(screen, "white", (player2_position.x - (pads_width/2), player2_position.y - (pads_height/2), pads_width, pads_height))
