@@ -24,15 +24,20 @@ player2_position = pygame.Vector2(screen.get_width() - 50,screen.get_height() / 
 centered_player1_position = pygame.Vector2(player1_position.x + 25, player1_position.y + 50)
 centered_player2_position = pygame.Vector2(player2_position.x, player2_position.y + 50)
 
-def BallInit():
-    pos = pygame.Vector2(640, 360)
-    dir = pygame.Vector2(random.randint(-100, 100), random.randint(-100, 100))
-    if dir.x in range(0, 20):
-        dir.x = 30
-    elif dir.x in range(-20, 0):
-        dir.x = -30
-    dir = dir.normalize()
-    return pos, dir
+
+def Init():
+    player1_position = pygame.Vector2(25,screen.get_height() / 2 - 50)
+    player2_position = pygame.Vector2(screen.get_width() - 50,screen.get_height() / 2 - 50)
+    ball_position = pygame.Vector2(640, 360)
+    ball_direction = pygame.Vector2(random.randint(-100, 100), random.randint(-100, 100))
+    if ball_direction.x in range(0, 20):
+        ball_direction.x = 30
+    elif ball_direction.x in range(-20, 0):
+        ball_direction.x = -30
+    ball_direction = ball_direction.normalize()
+    return ball_position, ball_direction, player1_position, player2_position
+
+ball_position, ball_direction, player1_position, player2_position = Init()
 
 def UpdateScoreText():
     right_score_text = pygame.font.Font(None, 150)
@@ -42,8 +47,21 @@ def UpdateScoreText():
     screen.blit(right_score_surface, (1210, 10))
     screen.blit(left_score_surface, (10, 10))
 
-def Player1Bump():
-    player1_size *= 1.5
+def Draw():
+    UpdateScoreText()
+    pygame.draw.rect(screen, "white", (player1_position.x, player1_position.y, 25, 100))
+    pygame.draw.rect(screen, "white", (player2_position.x, player2_position.y, 25, 100))
+    pygame.draw.circle(screen, "purple", (ball_position.x, ball_position.y), 15)
+    pygame.draw.circle(screen, "white", (ball_position.x, ball_position.y), 10)
+
+async def Goal():
+    timer_text = pygame.font.Font(None, 500)
+    Draw()
+    for i in range(3):
+        timer_surface = timer_text.render(str(i), False, "white")
+        await screen.blit(timer_surface, (screen.get_width() / 2 - 250, screen.get_height() / 2 - 250))
+        pygame.display.flip()
+        pygame.time.wait(1000)
 
 touch_fx = pygame.mixer.Sound("./sounds/touched.mp3")
 touch_fx.set_volume(0.7)
@@ -55,14 +73,11 @@ player2_size = 1
 bump_duration = 1
 bump_cd1 = 0
 bump_cd2 = 0
-ball_position, ball_direction = BallInit()
 # ball_direction = pygame.Vector2(1, 0)
 
 ball_positions = [ball_position]
 player1_positions = [centered_player1_position]
 player2_positions = [centered_player2_position]
-
-scored = False
 
 while running:
     # poll for events
@@ -94,16 +109,7 @@ while running:
         size += 1
 
     # draw the pads
-    pygame.draw.rect(screen, "white", (player1_position.x, player1_position.y, 25, 100))
-    pygame.draw.rect(screen, "white", (player2_position.x, player2_position.y, 25, 100))
-    pygame.draw.circle(screen, "purple", (ball_position.x, ball_position.y), 15)
-    pygame.draw.circle(screen, "white", (ball_position.x, ball_position.y), 10)
-
-    if scored:
-        time.sleep(1)
-        player1_position = pygame.Vector2(25,screen.get_height() / 2 - 50)
-        player2_position = pygame.Vector2(screen.get_width() - 50,screen.get_height() / 2 - 50)
-        scored = False
+    Draw()
 
     # math the ball trail
     if len(ball_positions) > trail_size:
@@ -179,15 +185,14 @@ while running:
     # check if point marked and updates score
     if ball_position.x <= 0:
         goal_fx.play()
+        ball_position, ball_direction, player1_position, player2_position = Init()
         right_score += 1
-        scored = True
+        Goal()
     if ball_position.x >= screen.get_width():
         goal_fx.play()
+        ball_position, ball_direction, player1_position, player2_position = Init()
         left_score += 1
-        scored = True
-
-    if scored:
-        ball_position, ball_direction = BallInit()
+        Goal()
 
     keys = pygame.key.get_pressed()
 
