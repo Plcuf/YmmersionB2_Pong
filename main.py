@@ -200,7 +200,7 @@ while running:
 
     # player 1 controls
     if keys[pygame.K_z]:
-        if player1_position.y > (pads_height/2):
+        if player1_position.y > 0:
             if ((abs(player1_position.x - player2_position.x) < pads_width) and (-pads_height <= ((player1_position.y - player_speed * dt) - player2_position.y) <= pads_height)):
                 player1_position.y = player2_position.y + pads_height
             else:
@@ -208,7 +208,7 @@ while running:
             
 
     if keys[pygame.K_s]:
-        if player1_position.y < screen.get_height() - (pads_height/2):
+        if player1_position.y < screen.get_height() - pads_height:
             if ((abs(player1_position.x - player2_position.x) < pads_width) and (-pads_height <= ((player1_position.y + player_speed * dt) - player2_position.y) <= pads_height)):
                 player1_position.y = player2_position.y - pads_height
             else:
@@ -222,7 +222,7 @@ while running:
                 player1_position.x -= player_speed * dt
 
     if keys[pygame.K_d]:
-        if player1_position.x < screen.get_width() - (pads_width/2) - 250:
+        if player1_position.x < screen.get_width() - (pads_width/2) - 25:
             if ((abs(player1_position.y - player2_position.y) < 100) and (-25 <= ((player1_position.x + player_speed * dt) - player2_position.x) <= 25)):
                 player1_position.x = player2_position.x - 25
             else:
@@ -230,21 +230,21 @@ while running:
 
     # player 2 controls
     if keys[pygame.K_UP]:
-        if player2_position.y > (pads_height/2):
+        if player2_position.y > 0:
             if ((abs(player2_position.x - player1_position.x) < pads_width) and (-pads_height <= ((player2_position.y - player_speed * dt) - player1_position.y) <= pads_height)):
                 player2_position.y = player1_position.y + pads_height
             else:
                 player2_position.y -= player_speed * dt
         
     if keys[pygame.K_DOWN]:
-        if player2_position.y < screen.get_height() - (pads_height/2):
+        if player2_position.y < screen.get_height() - pads_height:
             if ((abs(player2_position.x - player1_position.x) < pads_width) and (-pads_height <= ((player2_position.y + player_speed * dt) - player1_position.y) <= pads_height)):
                 player2_position.y = player1_position.y - pads_height
             else:
                 player2_position.y += player_speed * dt
 
     if keys[pygame.K_LEFT]:
-        if player2_position.x > (pads_width/2) + 250:
+        if player2_position.x > (pads_width/2) + 25:
             if ((abs(player2_position.y - player1_position.y) < pads_height) and (-pads_width <= ((player2_position.x - player_speed * dt) - player1_position.x) <= pads_width)):
                 player2_position.x = player1_position.x + pads_width
             else:
