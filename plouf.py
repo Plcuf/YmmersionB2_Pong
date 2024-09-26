@@ -11,9 +11,30 @@ clock = pygame.time.Clock()
 running = True
 dt = 0
 
+# KEYS
+# player 1
+player1_up_key = pygame.K_z
+player1_down_key = pygame.K_s
+player1_left_key = pygame.K_q
+player1_right_key = pygame.K_d
+player1_dash_key = pygame.K_f
+player1_bump_key = pygame.K_g
+
+# player 2
+player2_up_key = pygame.K_o
+player2_down_key = pygame.K_l
+player2_left_key = pygame.K_k
+player2_right_key = pygame.K_m
+player2_dash_key = pygame.K_UP
+player2_bump_key = pygame.K_RIGHT
+
 trail_size = 10
 player_speed = 500
-ball_speed = 500
+
+player1_bumping = False
+player1_bump_start = 0
+player2_bumping = False
+player2_bump_start = 0
 
 pads_width = 25
 pads_height = 100
@@ -36,6 +57,7 @@ rightpressed = False
 
 right_score, left_score = 0, 0
 
+
 player1_position = pygame.Vector2(25,screen.get_height() / 2 - 50)
 player2_position = pygame.Vector2(screen.get_width() - 50,screen.get_height() / 2 - 50)
 
@@ -53,9 +75,9 @@ def Init():
     elif ball_direction.x in range(-20, 0):
         ball_direction.x = -30
     ball_direction = ball_direction.normalize()
-    return ball_position, ball_direction, player1_position, player2_position
+    return ball_position, ball_direction, player1_position, player2_position, 500
 
-ball_position, ball_direction, player1_position, player2_position = Init()
+ball_position, ball_direction, player1_position, player2_position, ball_speed = Init()
 
 def UpdateScoreText():
     right_score_text = pygame.font.Font(None, 150)
@@ -81,16 +103,12 @@ async def Goal():
         pygame.display.flip()
         pygame.time.wait(1000)
 
+
 touch_fx = pygame.mixer.Sound("./sounds/touched.mp3")
 touch_fx.set_volume(0.7)
 goal_fx = pygame.mixer.Sound("./sounds/blast_3.mp3")
 
-player1_size = 1
-player2_size = 1
 
-bump_duration = 1
-bump_cd1 = 0
-bump_cd2 = 0
 # ball_direction = pygame.Vector2(1, 0)
 
 ball_positions = [ball_position]
@@ -167,6 +185,11 @@ while running:
     if (ball_position.x - centered_player1_position.x <= 15 and ball_position.x - centered_player1_position.x >= -40) and (ball_position.y - centered_player1_position.y <= 50 and ball_position.y - centered_player1_position.y >= -50):
         # play the collision sound 
         touch_fx.play()
+        if player1_bumping:
+            player1_bumping = False
+            ball_speed = 1000
+        else:
+            ball_speed = 500
         if ball_direction.x < 0:
             ball_direction.x = -ball_direction.x
         ball_direction.y += (ball_position.y - centered_player1_position.y) / 50
@@ -177,11 +200,15 @@ while running:
             ball_direction.x = math.floor(ball_direction.x)
         ball_direction = ball_direction.normalize()
 
-
     # bounce the ball on player 2
     if (ball_position.x - centered_player2_position.x >= -15 and ball_position.x - centered_player2_position.x <= 40) and (ball_position.y - centered_player2_position.y <= 50 and ball_position.y - centered_player2_position.y >= -50):
         # play the collision sound 
         touch_fx.play()
+        if player2_bumping:
+            player2_bumping = False
+            ball_speed = 1000
+        else:
+            ball_speed = 500
         if ball_direction.x > 0:
             ball_direction.x = -ball_direction.x
         ball_direction.y += (ball_position.y - centered_player2_position.y) / 50
@@ -195,15 +222,14 @@ while running:
     # check if point marked and updates score
     if ball_position.x <= 0:
         goal_fx.play()
-        ball_position, ball_direction, player1_position, player2_position = Init()
+        ball_position, ball_direction, player1_position, player2_position, ball_speed = Init()
         right_score += 1
         Goal()
     if ball_position.x >= screen.get_width():
         goal_fx.play()
-        ball_position, ball_direction, player1_position, player2_position = Init()
+        ball_position, ball_direction, player1_position, player2_position, ball_speed = Init()
         left_score += 1
         Goal()
-
 
     keys = pygame.key.get_pressed()
 
@@ -248,6 +274,10 @@ while running:
         if keys[pygame.K_LSHIFT] and player1_dash_used == False:
             dpressed = True
 
+    if keys[pygame.K_e] and not player1_bumping and (pygame.time.get_ticks() - player1_bump_start) > 1000:
+        player1_bumping = True
+        player1_bump_start = pygame.time.get_ticks()
+
     # player 2 controls
     if keys[pygame.K_UP]:
         if player2_position.y > 0:
@@ -289,6 +319,21 @@ while running:
         if keys[pygame.K_RSHIFT] and player2_dash_used == False:
             rightpressed = True
 
+    if keys[pygame.K_KP0] and not player2_bumping and (pygame.time.get_ticks() - player2_bump_start) > 1000:
+        player2_bumping = True
+        player2_bump_start = pygame.time.get_ticks()
+
+    # bump control
+    if player1_bumping:
+        if pygame.time.get_ticks() - player1_bump_start >= 500:
+            player1_bumping = False
+
+    if player2_bumping:
+        if pygame.time.get_ticks() - player2_bump_start >= 500:
+            player2_bumping = False
+
+
+    # dash controld
     if (zpressed or spressed or qpressed or dpressed) and player1_dash_cooldown == 0:
         player1_dash_used = True
         player1_dash_cooldown = 30
