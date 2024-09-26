@@ -1,31 +1,62 @@
-# Imports needed tools
+# Example file showing a circle moving on screen
 import pygame
 import random
-import time
+import math
 
-# Initialize pygame settings
+# pygame setup
+pygame.mixer.pre_init(44100, -16, 2, 64) #reducing the buffer size apparently reduces sounds delay
 pygame.init()
 screen = pygame.display.set_mode((1280, 720))
 clock = pygame.time.Clock()
 running = True
 dt = 0
 
-###############################
-########## FUNCTIONS ##########
-###############################
+trail_size = 10
+player_speed = 500
+ball_speed = 500
 
-# Initialize ball position
-def BallInit():
-    pos = pygame.Vector2(640, 360)
-    dir = pygame.Vector2(random.randint(-100, 100), random.randint(-100, 100))
-    if dir.x in range(0, 20):
-        dir.x = 30
-    elif dir.x in range(-20, 0):
-        dir.x = -30
-    dir = dir.normalize()
-    return pos, dir
+pads_width = 25
+pads_height = 100
 
-# Update score text
+dash_force = 200
+player1_dash_used = False
+player2_dash_used = False
+player1_dash_cooldown = 0
+player2_dash_cooldown = 0
+
+zpressed = False
+spressed = False
+qpressed = False
+dpressed = False
+
+uppressed = False  
+downpressed = False
+leftpressed = False
+rightpressed = False
+
+right_score, left_score = 0, 0
+
+player1_position = pygame.Vector2(25,screen.get_height() / 2 - 50)
+player2_position = pygame.Vector2(screen.get_width() - 50,screen.get_height() / 2 - 50)
+
+centered_player1_position = pygame.Vector2(player1_position.x + 25, player1_position.y + 50)
+centered_player2_position = pygame.Vector2(player2_position.x, player2_position.y + 50)
+
+
+def Init():
+    player1_position = pygame.Vector2(25,screen.get_height() / 2 - 50)
+    player2_position = pygame.Vector2(screen.get_width() - 50,screen.get_height() / 2 - 50)
+    ball_position = pygame.Vector2(640, 360)
+    ball_direction = pygame.Vector2(random.randint(-100, 100), random.randint(-100, 100))
+    if ball_direction.x in range(0, 20):
+        ball_direction.x = 30
+    elif ball_direction.x in range(-20, 0):
+        ball_direction.x = -30
+    ball_direction = ball_direction.normalize()
+    return ball_position, ball_direction, player1_position, player2_position
+
+ball_position, ball_direction, player1_position, player2_position = Init()
+
 def UpdateScoreText():
     right_score_text = pygame.font.Font(None, 150)
     right_score_surface = right_score_text.render(str(right_score), False, "white")
@@ -34,208 +65,316 @@ def UpdateScoreText():
     screen.blit(right_score_surface, (1210, 10))
     screen.blit(left_score_surface, (10, 10))
 
-###############################
-########## VARIABLES ##########
-###############################
+def Draw():
+    UpdateScoreText()
+    pygame.draw.rect(screen, "white", (player1_position.x, player1_position.y, 25, 100))
+    pygame.draw.rect(screen, "white", (player2_position.x, player2_position.y, 25, 100))
+    pygame.draw.circle(screen, "purple", (ball_position.x, ball_position.y), 15)
+    pygame.draw.circle(screen, "white", (ball_position.x, ball_position.y), 10)
 
-# Screen size
-screen_height = screen.get_height()
-screen_width = screen.get_width()
+async def Goal():
+    timer_text = pygame.font.Font(None, 500)
+    Draw()
+    for i in range(3):
+        timer_surface = timer_text.render(str(i), False, "white")
+        await screen.blit(timer_surface, (screen.get_width() / 2 - 250, screen.get_height() / 2 - 250))
+        pygame.display.flip()
+        pygame.time.wait(1000)
 
-# Pads size
-pads_width = 25
-pads_height = 100
-players_speed = 500
+touch_fx = pygame.mixer.Sound("./sounds/touched.mp3")
+touch_fx.set_volume(0.7)
+goal_fx = pygame.mixer.Sound("./sounds/blast_3.mp3")
 
-# Score variables
-scored = False
-right_score, left_score = 0, 0
+player1_size = 1
+player2_size = 1
 
-# Ball variables
-ball_position, ball_direction = BallInit()
-ball_speed = 500
-ball_size = 15
+bump_duration = 1
+bump_cd1 = 0
+bump_cd2 = 0
+# ball_direction = pygame.Vector2(1, 0)
 
-# Player position (centered)
-player1_position = pygame.Vector2(25 + pads_width/2, screen_height / 2)
-player2_position = pygame.Vector2(screen_width - (25 + pads_width/2), screen_height / 2)
-
-# Trails initializations
-length_of_trail = 10
 ball_positions = [ball_position]
-player1_positions = [player1_position]
-player2_positions = [player2_position]
-
-###############################
-########## GAME LOOP ##########
-###############################
+player1_positions = [centered_player1_position]
+player2_positions = [centered_player2_position]
 
 while running:
-
-    # Events
+    # poll for events
+    # pygame.QUIT event means the user clicked X to close your window
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
 
-    # Initialize the screen
+    # fill the screen with a color to wipe away anything from last frame
     screen.fill("black")
     UpdateScoreText()
 
-    # Score event
-    if scored:
-        time.sleep(0)
-        player1_position = pygame.Vector2(25,screen.get_height() / 2 - 50)
-        player2_position = pygame.Vector2(screen.get_width() - 50,screen.get_height() / 2 - 50)
-        scored = False
+    # draw circle and trail
+    size = 1
+    for element in reversed(ball_positions):
+        pygame.draw.circle(screen, ((135+(size*5)), 49, 181), (element[0], element[1]), 15-size)
+        size += 1
 
-    # Update ball position
-    ball_position += ball_direction * (ball_speed * dt)
+    # draw player 1 trail
+    size = 1
+    for element in reversed(player1_positions):
+        pygame.draw.rect(screen, (34, 59-(size*5), 199), (element[0] + (size/2), element[1], 25-size, 100))
+        size += 1
 
-    # Ball bounces on top and bottom walls
-    if (ball_position.y - 15) <= 0 and ball_direction.y < 0:
-        ball_direction.y = -ball_direction.y
-    if (ball_position.y + 15) >= screen_height and ball_direction.y > 0:
-        ball_direction.y = -ball_direction.y
+    # draw player 2 trail
+    size = 1
+    for element in reversed(player2_positions):
+        pygame.draw.rect(screen, (250, 2, 2+(size*5)), (element[0] + (size/2), element[1], 25-size, 100))
+        size += 1
 
-    # Ball bounce on player 1
-    if abs(ball_position.x - player1_position.x) < (ball_size + pads_width/2) and abs(ball_position.y - player1_position.y) < (ball_size + pads_height/2):
-        ball_direction.x = -ball_direction.x
-    if abs(ball_position.x - player1_position.x) < pads_width and abs(ball_position.y - player1_position.y) < (ball_size + pads_height/2):
-        ball_direction.y = -ball_direction.y
-        ball_direction.x = -ball_direction.x
+    # draw the pads
+    Draw()
 
-    # Ball bounces on player 2
-    if abs(ball_position.x - player2_position.x) < (ball_size + pads_width/2) and abs(ball_position.y - player2_position.y) < (ball_size + pads_height/2):
-        ball_direction.x = -ball_direction.x
-    if abs(ball_position.x - player2_position.x) < pads_width and abs(ball_position.y - player2_position.y) < (ball_size + pads_height/2):
-        ball_direction.y = -ball_direction.y
-        ball_direction.x = -ball_direction.x
-
-    # Update score
-    if ball_position.x <= 0:
-        right_score += 1
-        scored = True
-    if ball_position.x >= screen.get_width():
-        left_score += 1
-        scored = True
-    if scored:
-        ball_position, ball_direction = BallInit()
-
-    # Input controls
-    keys = pygame.key.get_pressed()
-
-    # player 1 controls
-    if keys[pygame.K_z]:
-        if player1_position.y > (pads_height/2):
-            if ((abs(player1_position.x - player2_position.x) < pads_width) and (-pads_height <= ((player1_position.y - players_speed * dt) - player2_position.y) <= pads_height)):
-                player1_position.y = player2_position.y + pads_height
-            else:
-                player1_position.y -= players_speed * dt
-            
-
-    if keys[pygame.K_s]:
-        if player1_position.y < screen.get_height() - (pads_height/2):
-            if ((abs(player1_position.x - player2_position.x) < pads_width) and (-pads_height <= ((player1_position.y + players_speed * dt) - player2_position.y) <= pads_height)):
-                player1_position.y = player2_position.y - pads_height
-            else:
-                player1_position.y += players_speed * dt
-
-    if keys[pygame.K_q]:
-        if player1_position.x > (pads_width/2) + 25:
-            if ((abs(player1_position.y - player2_position.y) < pads_height) and (-pads_width <= ((player1_position.x - players_speed * dt) - player2_position.x) <= pads_width)):
-                player1_position.x = player2_position.x + pads_width
-            else:
-                player1_position.x -= players_speed * dt
-
-    if keys[pygame.K_d]:
-        if player1_position.x < screen.get_width() - (pads_width/2) - 250:
-            if ((abs(player1_position.y - player2_position.y) < 100) and (-25 <= ((player1_position.x + players_speed * dt) - player2_position.x) <= 25)):
-                player1_position.x = player2_position.x - 25
-            else:
-                player1_position.x += players_speed * dt
-
-    # player 2 controls
-    if keys[pygame.K_UP]:
-        if player2_position.y > (pads_height/2):
-            if ((abs(player2_position.x - player1_position.x) < pads_width) and (-pads_height <= ((player2_position.y - players_speed * dt) - player1_position.y) <= pads_height)):
-                player2_position.y = player1_position.y + pads_height
-            else:
-                player2_position.y -= players_speed * dt
-        
-    if keys[pygame.K_DOWN]:
-        if player2_position.y < screen.get_height() - (pads_height/2):
-            if ((abs(player2_position.x - player1_position.x) < pads_width) and (-pads_height <= ((player2_position.y + players_speed * dt) - player1_position.y) <= pads_height)):
-                player2_position.y = player1_position.y - pads_height
-            else:
-                player2_position.y += players_speed * dt
-
-    if keys[pygame.K_LEFT]:
-        if player2_position.x > (pads_width/2) + 250:
-            if ((abs(player2_position.y - player1_position.y) < pads_height) and (-pads_width <= ((player2_position.x - players_speed * dt) - player1_position.x) <= pads_width)):
-                player2_position.x = player1_position.x + pads_width
-            else:
-                player2_position.x -= players_speed * dt
-    
-    if keys[pygame.K_RIGHT]:
-        if player2_position.x < screen.get_width() - (pads_width/2) - 25:
-            if ((abs(player2_position.y - player1_position.y) < pads_height) and (-25 <= ((player2_position.x + players_speed * dt) - player1_position.x) <= 25)):
-                player2_position.x = player1_position.x - 25
-            else:
-                player2_position.x += players_speed * dt
-
-    # Ball trail
-    if len(ball_positions) > length_of_trail:
+    # math the ball trail
+    if len(ball_positions) > trail_size:
         ball_positions.pop(0)
         ball_positions.append([ball_position.x, ball_position.y])
     else:
         ball_positions.append([ball_position.x, ball_position.y])
-    
-    decrement = 1
-    for element in reversed(ball_positions):
-        color = (135+(decrement), 49, 181)
-        pygame.draw.circle(screen, color, element, 15-decrement)
-        decrement += 1
 
-    # Player 1 trail
-    if len(player1_positions) > length_of_trail:
+    # math the player 1 trail
+    if len(player1_positions) > trail_size:
         player1_positions.pop(0)
-        player1_positions.append([player1_position.x - (pads_width/2), player1_position.y - (pads_height/2)])
+        player1_positions.append([player1_position.x, player1_position.y])
     else:
-        player1_positions.append([player1_position.x - (pads_width/2), player1_position.y - (pads_height/2)])
-
-    decrement = 1
-    for element in reversed(player1_positions):
-        color = (34, 59-(decrement), 199)
-        pygame.draw.rect(screen, color, (element, pads_width-decrement, pads_height))
-        decrement += 1
-
-    # Player 2 trail
-    if len(player2_positions) > length_of_trail:
+        player1_positions.append([player1_position.x, player1_position.y])
+    
+    # math the player 2 trail
+    if len(player2_positions) > trail_size:
         player2_positions.pop(0)
-        player2_positions.append([player2_position.x - (pads_width/2), player2_position.y - (pads_height/2)])
+        player2_positions.append([player2_position.x, player2_position.y])
     else:
-        player2_positions.append([player2_position.x - (pads_width/2), player2_position.y - (pads_height/2)])
+        player2_positions.append([player2_position.x, player2_position.y])
 
-    decrement = 1
-    for element in reversed(player2_positions):
-        color = (250, 2, 2+(decrement*5))
-        pygame.draw.rect(screen, color, (element, 25-decrement, 100))
-        decrement += 1
+    # center the player positions
+    centered_player1_position = pygame.Vector2(player1_position.x + 25, player1_position.y + 50)
+    centered_player2_position = pygame.Vector2(player2_position.x, player2_position.y + 50)
 
-    # Draw the pads
-    pygame.draw.rect(screen, "white", (player1_position.x - (pads_width/2), player1_position.y - (pads_height/2), pads_width, pads_height))
-    pygame.draw.rect(screen, "white", (player2_position.x - (pads_width/2), player2_position.y - (pads_height/2), pads_width, pads_height))
+    #update ball position
+    ball_position += ball_direction * (ball_speed * dt)
+
+    # bounce the ball on top and bottom side
+    if (ball_position.y - 15) <= 0 and ball_direction.y < 0:
+        ball_direction.y = -ball_direction.y
+    if (ball_position.y + 15) >= screen.get_height() and ball_direction.y > 0:
+        ball_direction.y = -ball_direction.y
+
+    # bounce the ball on player 1
+    if (ball_position.x - centered_player1_position.x <= 15 and ball_position.x - centered_player1_position.x >= -40) and (ball_position.y - centered_player1_position.y <= 50 and ball_position.y - centered_player1_position.y >= -50):
+        # play the collision sound 
+        touch_fx.play()
+        if ball_direction.x < 0:
+            ball_direction.x = -ball_direction.x
+        ball_direction.y += (ball_position.y - centered_player1_position.y) / 50
+        
+        if ball_direction.x > 0:
+            ball_direction.x = math.ceil(ball_direction.x)
+        else:
+            ball_direction.x = math.floor(ball_direction.x)
+        ball_direction = ball_direction.normalize()
+
+
+    # bounce the ball on player 2
+    if (ball_position.x - centered_player2_position.x >= -15 and ball_position.x - centered_player2_position.x <= 40) and (ball_position.y - centered_player2_position.y <= 50 and ball_position.y - centered_player2_position.y >= -50):
+        # play the collision sound 
+        touch_fx.play()
+        if ball_direction.x > 0:
+            ball_direction.x = -ball_direction.x
+        ball_direction.y += (ball_position.y - centered_player2_position.y) / 50
+        
+        if ball_direction.x > 0:
+            ball_direction.x = math.ceil(ball_direction.x)
+        else:
+            ball_direction.x = math.floor(ball_direction.x)
+        ball_direction = ball_direction.normalize()
+
+    # check if point marked and updates score
+    if ball_position.x <= 0:
+        goal_fx.play()
+        ball_position, ball_direction, player1_position, player2_position = Init()
+        right_score += 1
+        Goal()
+    if ball_position.x >= screen.get_width():
+        goal_fx.play()
+        ball_position, ball_direction, player1_position, player2_position = Init()
+        left_score += 1
+        Goal()
+
+
+    keys = pygame.key.get_pressed()
+
+    # player 1 controls
+    if keys[pygame.K_z]:
+        if player1_position.y > 0:
+            if ((abs(player1_position.x - player2_position.x) < pads_width) and (-pads_height <= ((player1_position.y - player_speed * dt) - player2_position.y) <= pads_height)):
+                player1_position.y = player2_position.y + pads_height
+            else:
+                player1_position.y -= player_speed * dt
+
+        if keys[pygame.K_LSHIFT] and player1_dash_used == False:
+            zpressed = True
+
+    if keys[pygame.K_s]:
+        if player1_position.y < screen.get_height() - pads_height:
+            if ((abs(player1_position.x - player2_position.x) < pads_width) and (-pads_height <= ((player1_position.y + player_speed * dt) - player2_position.y) <= pads_height)):
+                player1_position.y = player2_position.y - pads_height
+            else:
+                player1_position.y += player_speed * dt
+        
+        if keys[pygame.K_LSHIFT] and player1_dash_used == False:
+            spressed = True
+
+    if keys[pygame.K_q]:
+        if player1_position.x > (pads_width/2) + 25:
+            if ((abs(player1_position.y - player2_position.y) < pads_height) and (-pads_width <= ((player1_position.x - player_speed * dt) - player2_position.x) <= pads_width)):
+                player1_position.x = player2_position.x + pads_width
+            else:
+                player1_position.x -= player_speed * dt
+
+        if keys[pygame.K_LSHIFT] and player1_dash_used == False:
+            qpressed = True
+
+    if keys[pygame.K_d]:
+        if player1_position.x < screen.get_width() - (pads_width/2) - 25:
+            if ((abs(player1_position.y - player2_position.y) < 100) and (-25 <= ((player1_position.x + player_speed * dt) - player2_position.x) <= 25)):
+                player1_position.x = player2_position.x - 25
+            else:
+                player1_position.x += player_speed * dt
+
+        if keys[pygame.K_LSHIFT] and player1_dash_used == False:
+            dpressed = True
+
+    # player 2 controls
+    if keys[pygame.K_UP]:
+        if player2_position.y > 0:
+            if ((abs(player2_position.x - player1_position.x) < pads_width) and (-pads_height <= ((player2_position.y - player_speed * dt) - player1_position.y) <= pads_height)):
+                player2_position.y = player1_position.y + pads_height
+            else:
+                player2_position.y -= player_speed * dt
     
-    # Draw the ball
-    pygame.draw.circle(screen, "purple", (ball_position.x, ball_position.y), 15)
-    pygame.draw.circle(screen, "white", (ball_position.x, ball_position.y), 10)
+        if keys[pygame.K_RSHIFT] and player2_dash_used == False:
+            uppressed = True
+        
+    if keys[pygame.K_DOWN]:
+        if player2_position.y < screen.get_height() - pads_height:
+            if ((abs(player2_position.x - player1_position.x) < pads_width) and (-pads_height <= ((player2_position.y + player_speed * dt) - player1_position.y) <= pads_height)):
+                player2_position.y = player1_position.y - pads_height
+            else:
+                player2_position.y += player_speed * dt
+
+        if keys[pygame.K_RSHIFT] and player2_dash_used == False:
+            downpressed = True
+
+    if keys[pygame.K_LEFT]:
+        if player2_position.x > (pads_width/2) + 25:
+            if ((abs(player2_position.y - player1_position.y) < pads_height) and (-pads_width <= ((player2_position.x - player_speed * dt) - player1_position.x) <= pads_width)):
+                player2_position.x = player1_position.x + pads_width
+            else:
+                player2_position.x -= player_speed * dt
+
+        if keys[pygame.K_RSHIFT] and player2_dash_used == False:
+            leftpressed = True
+    
+    if keys[pygame.K_RIGHT]:
+        if player2_position.x < screen.get_width() - (pads_width/2) - 25:
+            if ((abs(player2_position.y - player1_position.y) < pads_height) and (-25 <= ((player2_position.x + player_speed * dt) - player1_position.x) <= 25)):
+                player2_position.x = player1_position.x - 25
+            else:
+                player2_position.x += player_speed * dt
+
+        if keys[pygame.K_RSHIFT] and player2_dash_used == False:
+            rightpressed = True
+
+    if (zpressed or spressed or qpressed or dpressed) and player1_dash_cooldown == 0:
+        player1_dash_used = True
+        player1_dash_cooldown = 30
+
+        if zpressed:
+            player1_position.y -= dash_force
+        if spressed:
+            player1_position.y += dash_force
+        if qpressed:
+            player1_position.x -= dash_force
+        if dpressed:
+            player1_position.x += dash_force
+
+        previous_x, previous_y = player1_positions[-1][0], player1_positions[-1][1]
+
+        for i in range(5):
+            player1_positions.pop(0)
+            player1_positions.append([previous_x + (player1_position.x - previous_x) * (i+1)/6, previous_y + (player1_position.y - previous_y) * (i+1)/6])
+
+        zpressed = False
+        spressed = False
+        qpressed = False
+        dpressed = False
+
+    if keys[pygame.K_LSHIFT] == False:
+        player1_dash_used = False
+
+    if (uppressed or downpressed or leftpressed or rightpressed) and player2_dash_cooldown == 0:
+        player2_dash_used = True
+        player2_dash_cooldown = 30
+
+        if uppressed:
+            player2_position.y -= dash_force
+        if downpressed:
+            player2_position.y += dash_force
+        if leftpressed:
+            player2_position.x -= dash_force
+        if rightpressed:
+            player2_position.x += dash_force
+
+        previous_x, previous_y = player2_positions[-1][0], player2_positions[-1][1]
+
+        for i in range(5):
+            player2_positions.pop(0)
+            player2_positions.append([previous_x + (player2_position.x - previous_x) * (i+1)/6, previous_y + (player2_position.y - previous_y) * (i+1)/6])
+
+        uppressed = False
+        downpressed = False
+        leftpressed = False
+        rightpressed = False
+
+    if keys[pygame.K_RSHIFT] == False:
+        player2_dash_used = False
+
+    if player1_dash_cooldown > 0:
+        player1_dash_cooldown -= 1
+    
+    if player2_dash_cooldown > 0:
+        player2_dash_cooldown -= 1
 
     
-    
-    # Update the screen
+    if not(player1_position.y > 0):
+        player1_position.y = 0
+    if not(player1_position.y < screen.get_height() - pads_height):
+        player1_position.y = screen.get_height() - pads_height
+    if not(player1_position.x > (pads_width/2) + 25):
+        player1_position.x = (pads_width/2) + 25
+    if not(player1_position.x < screen.get_width() - (pads_width/2) - 25):
+        player1_position.x = screen.get_width() - (pads_width/2) - 25
+
+    if not(player2_position.y > 0):
+        player2_position.y = 0
+    if not(player2_position.y < screen.get_height() - pads_height):
+        player2_position.y = screen.get_height() - pads_height
+    if not(player2_position.x > (pads_width/2) + 25):
+        player2_position.x = (pads_width/2) + 25
+    if not(player2_position.x < screen.get_width() - (pads_width/2) - 25):
+        player2_position.x = screen.get_width() - (pads_width/2) - 25
+
+
+    # flip() the display to put your work on screen
     pygame.display.flip()
 
-    # Update the clock
+    # limits FPS to 60
+    # dt is delta time in seconds since last frame, used for framerate-
+    # independent physics.
     dt = clock.tick(60) / 1000
 
 pygame.quit()
