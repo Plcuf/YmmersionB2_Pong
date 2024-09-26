@@ -25,12 +25,12 @@ player1_dash_key = pygame.K_f
 player1_bump_key = pygame.K_g
 
 # player 2
-player2_up_key = pygame.K_o
-player2_down_key = pygame.K_l
-player2_left_key = pygame.K_k
-player2_right_key = pygame.K_m
-player2_dash_key = pygame.K_UP
-player2_bump_key = pygame.K_RIGHT
+player2_up_key = pygame.K_UP
+player2_down_key = pygame.K_DOWN
+player2_left_key = pygame.K_LEFT
+player2_right_key = pygame.K_RIGHT
+player2_dash_key = pygame.K_k
+player2_bump_key = pygame.K_l
 
 # others
 start_key = pygame.K_SPACE
@@ -78,8 +78,8 @@ centered_player2_position = pygame.Vector2(player2_position.x, player2_position.
 
 ball_color = [0,0,0]
 
-ball_color_lowspeed = [229, 255, 0]
-ball_color_highspeed = [0, 252, 147]
+ball_color_lowspeed = [217, 0, 255]
+ball_color_highspeed = [255, 0, 98]
 
 player1_color = [34, 59, 199]
 player2_color = [250, 2, 2]
@@ -125,7 +125,6 @@ def Draw():
         for i in range(3)
     ]
     pygame.draw.rect(screen, dash_current_color, (player1_position.x + 5, player1_position.y + 10, 15, 80))
-
 
     # draw player 2
     time_since_bump = pygame.time.get_ticks() - player2_bump_start
@@ -388,7 +387,6 @@ while game:
                     player1_position.x += player_speed * dt
 
             if keys[player1_dash_key] and player1_dash_used == False:
-                dash_fx.play()
                 dpressed = True
 
         if keys[player1_bump_key] and not player1_bumping and (pygame.time.get_ticks() - player1_bump_start) > bump_cooldown * 1000:
