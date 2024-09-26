@@ -50,10 +50,11 @@ pads_width = 25
 pads_height = 100
 
 dash_force = 200
+dash_cooldown = 30
 player1_dash_used = False
 player2_dash_used = False
-player1_dash_cooldown = 0
-player2_dash_cooldown = 0
+player1_dash_cooldown = dash_cooldown
+player2_dash_cooldown = dash_cooldown
 
 zpressed = False
 spressed = False
@@ -80,6 +81,9 @@ ball_color = [0,0,0]
 ball_color_lowspeed = [229, 255, 0]
 ball_color_highspeed = [0, 252, 147]
 
+player1_color = [34, 59, 199]
+player2_color = [250, 2, 2]
+
 def Init():
     player1_position = pygame.Vector2(25,screen.get_height() / 2 - 50)
     player2_position = pygame.Vector2(screen.get_width() - 50,screen.get_height() / 2 - 50)
@@ -104,8 +108,43 @@ def UpdateScoreText():
 
 def Draw():
     UpdateScoreText()
-    pygame.draw.rect(screen, "white", (player1_position.x, player1_position.y, 25, 100))
-    pygame.draw.rect(screen, "white", (player2_position.x, player2_position.y, 25, 100))
+
+    # draw player 1
+    time_since_bump = pygame.time.get_ticks() - player1_bump_start
+    color_ratio = min(time_since_bump / 1000, 1)
+    current_color = [
+        player1_color[i] + color_ratio * (255 - player1_color[i])
+        for i in range(3)
+    ]
+    pygame.draw.rect(screen, current_color, (player1_position.x, player1_position.y, 25, 100))
+
+    # draw player 1 dash cooldown indicator
+    dash_color_ratio = player1_dash_cooldown / dash_cooldown
+    dash_current_color = [
+        player1_color[i] + dash_color_ratio * (255 - player1_color[i])
+        for i in range(3)
+    ]
+    pygame.draw.rect(screen, dash_current_color, (player1_position.x + 5, player1_position.y + 10, 15, 80))
+
+
+    # draw player 2
+    time_since_bump = pygame.time.get_ticks() - player2_bump_start
+    color_ratio = min(time_since_bump / 1000, 1)
+    current_color = [
+        player2_color[i] + color_ratio * (255 - player2_color[i])
+        for i in range(3)
+    ]
+    pygame.draw.rect(screen, current_color, (player2_position.x, player2_position.y, 25, 100))
+
+    # draw player 2 dash cooldown indicator
+    dash_color_ratio = player2_dash_cooldown / dash_cooldown
+    dash_current_color = [
+        player2_color[i] + dash_color_ratio * (255 - player2_color[i])
+        for i in range(3)
+    ]
+    pygame.draw.rect(screen, dash_current_color, (player2_position.x + 5, player2_position.y + 10, 15, 80))
+
+    # draw ball
     pygame.draw.circle(screen, (ball_color[0], ball_color[1], ball_color[2]), (ball_position.x, ball_position.y), 15)
     pygame.draw.circle(screen, "white", (ball_position.x, ball_position.y), 10)
 
@@ -196,13 +235,13 @@ while game:
         # draw player 1 trail
         size = 1
         for element in reversed(player1_positions):
-            pygame.draw.rect(screen, (34, 59-(size*5), 199), (element[0] + (size/2), element[1], 25-size, 100))
+            pygame.draw.rect(screen, (player1_color[0], player1_color[1], player1_color[2]), (element[0] + (size/2), element[1], 25-size, 100))
             size += 1
 
         # draw player 2 trail
         size = 1
         for element in reversed(player2_positions):
-            pygame.draw.rect(screen, (250, 2, 2+(size*5)), (element[0] + (size/2), element[1], 25-size, 100))
+            pygame.draw.rect(screen, (player2_color[0], player2_color[1], player2_color[2]), (element[0] + (size/2), element[1], 25-size, 100))
             size += 1
 
         # draw the pads
@@ -411,11 +450,11 @@ while game:
                 player2_bumping = False
 
 
-        # dash controld
-        if (zpressed or spressed or qpressed or dpressed) and player1_dash_cooldown == 0:
+        # dash control
+        if (zpressed or spressed or qpressed or dpressed) and player1_dash_cooldown == dash_cooldown:
             dash_fx.play()
             player1_dash_used = True
-            player1_dash_cooldown = 30
+            player1_dash_cooldown = 0
 
             if zpressed:
                 player1_position.y -= dash_force
@@ -440,10 +479,10 @@ while game:
         if keys[player1_dash_key] == False:
             player1_dash_used = False
 
-        if (uppressed or downpressed or leftpressed or rightpressed) and player2_dash_cooldown == 0:
+        if (uppressed or downpressed or leftpressed or rightpressed) and player2_dash_cooldown == dash_cooldown:
             dash_fx.play()
             player2_dash_used = True
-            player2_dash_cooldown = 30
+            player2_dash_cooldown = 0
 
             if uppressed:
                 player2_position.y -= dash_force
@@ -468,11 +507,11 @@ while game:
         if keys[player2_dash_key] == False:
             player2_dash_used = False
 
-        if player1_dash_cooldown > 0:
-            player1_dash_cooldown -= 1
+        if player1_dash_cooldown < dash_cooldown:
+            player1_dash_cooldown += 1
         
-        if player2_dash_cooldown > 0:
-            player2_dash_cooldown -= 1
+        if player2_dash_cooldown < dash_cooldown:
+            player2_dash_cooldown += 1
 
         
         if not(player1_position.y > 0):
