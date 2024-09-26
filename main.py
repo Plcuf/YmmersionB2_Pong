@@ -476,9 +476,9 @@ while game:
 
         end_font = pygame.font.Font(None, 100)
         end_surface = end_font.render(winner + " player wins", False, "white")
-        screen.blit(end_surface, (screen.get_width() / 2 - end_surface.get_width() / 2, 10))
+        screen.blit(end_surface, (screen.get_width() / 2 - end_surface.get_width() / 2, 30))
 
-        text = pygame.font.Font(None, 150)
+        text = pygame.font.Font(None, 50)
         text_surface = text.render("Back to Menu", False, "white")
         screen.blit(text_surface, (screen.get_width() / 2 - text_surface.get_width() / 2, screen.get_height() / 2 - text_surface.get_height() / 2))
 
