@@ -291,13 +291,13 @@ while running:
     # bump control
     if player1_bumping:
         player1_size = 1.2
-        if pygame.time.get_ticks() - player1_bump_start >= 250:
+        if pygame.time.get_ticks() - player1_bump_start >= 500:
             player1_bumping = False
             player1_size = 1
 
     if player2_bumping:
         player2_size = 1.2
-        if pygame.time.get_ticks() - player2_bump_start >= 250:
+        if pygame.time.get_ticks() - player2_bump_start >= 500:
             player2_bumping = False
             player2_size = 1
 
